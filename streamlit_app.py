@@ -15,7 +15,7 @@ except KeyError:
 # INIT CLIENT
 # -------------------------------
 client = Groq(api_key=GROQ_API_KEY)
-LLAMA_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
+LLAMA_MODEL = "meta-llama/llama-prompt-guard-2-22m"
 
 # -------------------------------
 # FUNCTION
