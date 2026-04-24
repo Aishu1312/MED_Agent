@@ -22,7 +22,7 @@ translator = Translator()
 LLAMA_MODEL = "llama-3.1-8b-instant"
 
 # -------------------------------
-# LANGUAGE OPTIONS (FIXED)
+# LANGUAGE OPTIONS (YOUR VERSION)
 # -------------------------------
 languages = {
     "English": "en",
@@ -50,14 +50,10 @@ def generate_groq_response(user_message):
     try:
         chat_completion = client.chat.completions.create(
             messages=[
-                {
-                    "role": "system",
-                    "content": "You are a medical assistant. Provide general guidance only. Do not diagnose."
-                },
+                {"role": "system", "content": "Provide general health guidance only. Do not diagnose."},
                 {"role": "user", "content": user_message}
             ],
             model=LLAMA_MODEL,
-            temperature=0.7,
         )
         return chat_completion.choices[0].message.content
     except Exception as e:
@@ -69,7 +65,6 @@ def generate_groq_response(user_message):
 st.set_page_config(page_title="AI Medical Assistant", page_icon="🩺")
 
 st.title("🩺 AI Medical Assistant")
-st.caption("Smart • Multilingual • Image Enabled")
 
 # -------------------------------
 # TABS
@@ -80,33 +75,21 @@ tab1, tab2 = st.tabs(["🩺 Health Assistant", "📍 Nearby Doctors"])
 # TAB 1
 # -------------------------------
 with tab1:
-    st.subheader("Ask Health Questions")
-
     user_query = st.text_area("Enter your symptoms:")
 
-    # IMAGE UPLOAD
-    uploaded_file = st.file_uploader("📷 Upload symptom image", type=["jpg", "png"])
+    uploaded_file = st.file_uploader("📷 Upload image", type=["jpg", "png"])
 
     if uploaded_file:
         image = Image.open(uploaded_file)
-        st.image(image, caption="Uploaded Image", use_column_width=True)
+        st.image(image)
 
-    # BUTTON
     if st.button("Get Advice"):
         if not user_query.strip():
-            st.warning("⚠️ Please enter your query.")
+            st.warning("Enter your query")
         else:
-            emergency_keywords = [
-                "chest pain", "breathing difficulty", "unconscious",
-                "seizure", "heart attack", "stroke"
-            ]
-
-            if any(word in user_query.lower() for word in emergency_keywords):
-                st.error("🚨 Emergency! Seek immediate medical help.")
-
             with st.spinner("Analyzing..."):
 
-                # Safe translate input
+                # SAFE TRANSLATE INPUT
                 try:
                     translated_input = translator.translate(user_query, dest="en").text
                 except:
@@ -114,7 +97,7 @@ with tab1:
 
                 response = generate_groq_response(translated_input)
 
-                # Safe translate output
+                # SAFE TRANSLATE OUTPUT
                 try:
                     final_response = translator.translate(response, dest=lang_code).text
                 except:
@@ -123,37 +106,19 @@ with tab1:
                 st.success("AI Response")
                 st.write(final_response)
 
-    st.markdown("---")
-    st.warning("⚠️ This is not medical advice. Always consult a doctor.")
-
 # -------------------------------
 # TAB 2
 # -------------------------------
 with tab2:
-    st.subheader("Find Nearby Doctors")
-
-    location = st.text_input("Enter location:")
-
-    doctor_type = st.selectbox(
-        "Select doctor type:",
-        ["General Physician", "Dentist", "Cardiologist", "Dermatologist", "ENT Specialist"]
-    )
+    location = st.text_input("Enter location")
 
     if st.button("Search"):
-        if not location.strip():
-            st.warning("⚠️ Enter location")
-        else:
-            query = f"{doctor_type} near {location}"
-            encoded_query = urllib.parse.quote(query)
-
-            st.success("Results 👇")
-
-            st.markdown(f"[🔍 Doctors](https://www.google.com/maps/search/{encoded_query})")
-            st.markdown(f"[🏥 Hospitals](https://www.google.com/maps/search/hospitals+near+{encoded_query})")
-            st.markdown(f"[💊 Pharmacies](https://www.google.com/maps/search/pharmacy+near+{encoded_query})")
+        if location:
+            query = urllib.parse.quote(f"doctor near {location}")
+            st.markdown(f"https://www.google.com/maps/search/{query}")
 
 # -------------------------------
 # FOOTER
 # -------------------------------
 st.markdown("---")
-st.caption("Built with ❤️ using Groq + Streamlit")
+st.caption("Built with Groq + Streamlit")
