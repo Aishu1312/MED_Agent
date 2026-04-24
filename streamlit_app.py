@@ -1,6 +1,9 @@
 import streamlit as st
 from groq import Groq
 import urllib.parse
+from googletrans import Translator
+import speech_recognition as sr
+from PIL import Image
 
 # -------------------------------
 # LOAD API KEY
@@ -12,10 +15,23 @@ except KeyError:
     st.stop()
 
 # -------------------------------
-# INIT CLIENT
+# INIT
 # -------------------------------
 client = Groq(api_key=GROQ_API_KEY)
-LLAMA_MODEL = "llama-3.1-8b-instant"
+translator = Translator()
+
+LLAMA_MODEL = "llama3-8b-8192"
+
+# -------------------------------
+# LANGUAGE OPTIONS
+# -------------------------------
+languages = {
+    "English": "en",
+    "Hindi": "hi"
+}
+
+selected_lang = st.sidebar.selectbox("🌍 Select Language", list(languages.keys()))
+lang_code = languages[selected_lang]
 
 # -------------------------------
 # FUNCTION
@@ -24,7 +40,10 @@ def generate_groq_response(user_message):
     try:
         chat_completion = client.chat.completions.create(
             messages=[
-                {"role": "system", "content": "You are a helpful medical assistant. Provide safe general health guidance. Avoid diagnosis."},
+                {
+                    "role": "system",
+                    "content": "You are a medical assistant. Provide general health guidance only. Do not diagnose. Suggest consulting a doctor."
+                },
                 {"role": "user", "content": user_message}
             ],
             model=LLAMA_MODEL,
@@ -35,11 +54,27 @@ def generate_groq_response(user_message):
         return f"❌ Error: {e}"
 
 # -------------------------------
+# VOICE INPUT FUNCTION
+# -------------------------------
+def get_voice_input():
+    r = sr.Recognizer()
+    with sr.Microphone() as source:
+        st.info("🎤 Listening...")
+        audio = r.listen(source)
+
+        try:
+            text = r.recognize_google(audio)
+            return text
+        except:
+            return "❌ Could not understand audio"
+
+# -------------------------------
 # PAGE CONFIG
 # -------------------------------
 st.set_page_config(page_title="AI Medical Assistant", page_icon="🩺")
 
 st.title("🩺 AI Medical Assistant")
+st.caption("Smart • Multilingual • Voice Enabled")
 
 # -------------------------------
 # TABS
@@ -47,64 +82,83 @@ st.title("🩺 AI Medical Assistant")
 tab1, tab2 = st.tabs(["🩺 Health Assistant", "📍 Nearby Doctors"])
 
 # -------------------------------
-# TAB 1: AI ASSISTANT
+# TAB 1
 # -------------------------------
 with tab1:
     st.subheader("Ask Health Questions")
 
-    user_query = st.text_area(
-        "Your health inquiry:",
-        "I have a persistent cough and feel tired. What could be the reason?"
-    )
+    # TEXT INPUT
+    user_query = st.text_area("Enter your symptoms:")
 
+    # VOICE INPUT
+    if st.button("🎤 Speak"):
+        user_query = get_voice_input()
+        st.write("You said:", user_query)
+
+    # IMAGE UPLOAD
+    uploaded_file = st.file_uploader("📷 Upload symptom image", type=["jpg", "png"])
+
+    if uploaded_file:
+        image = Image.open(uploaded_file)
+        st.image(image, caption="Uploaded Image", use_column_width=True)
+
+    # BUTTON
     if st.button("Get Advice"):
         if not user_query.strip():
-            st.warning("⚠️ Please enter your health inquiry.")
+            st.warning("⚠️ Please enter your query.")
         else:
-            # 🚨 Basic emergency detection
-            if any(word in user_query.lower() for word in ["chest pain", "breathing difficulty", "unconscious"]):
-                st.error("🚨 This may be serious. Seek immediate medical help.")
+            # Emergency detection
+            emergency_keywords = [
+                "chest pain", "breathing difficulty", "unconscious",
+                "seizure", "heart attack", "stroke"
+            ]
 
-            with st.spinner("Analyzing symptoms..."):
-                response = generate_groq_response(user_query)
+            if any(word in user_query.lower() for word in emergency_keywords):
+                st.error("🚨 Emergency! Please seek immediate medical help.")
+
+            with st.spinner("Analyzing..."):
+                # Translate to English for AI
+                translated_input = translator.translate(user_query, dest="en").text
+
+                response = generate_groq_response(translated_input)
+
+                # Translate back
+                final_response = translator.translate(response, dest=lang_code).text
+
                 st.success("AI Response")
-                st.write(response)
+                st.write(final_response)
 
     st.markdown("---")
-    st.warning("⚠️ This is not medical advice. Consult a doctor.")
+    st.warning("⚠️ This is not medical advice. Always consult a doctor.")
 
 # -------------------------------
-# TAB 2: NEARBY DOCTORS
+# TAB 2
 # -------------------------------
 with tab2:
     st.subheader("Find Nearby Doctors")
 
-    location = st.text_input("Enter your location (City / Area):", "Nagpur")
+    location = st.text_input("Enter location:")
 
     doctor_type = st.selectbox(
         "Select doctor type:",
         ["General Physician", "Dentist", "Cardiologist", "Dermatologist", "ENT Specialist"]
     )
 
-    if st.button("Search Doctors"):
+    if st.button("Search"):
         if not location.strip():
-            st.warning("⚠️ Please enter a location.")
+            st.warning("⚠️ Enter location")
         else:
             query = f"{doctor_type} near {location}"
             encoded_query = urllib.parse.quote(query)
 
-            maps_url = f"https://www.google.com/maps/search/{encoded_query}"
-            hospital_url = f"https://www.google.com/maps/search/hospitals+near+{encoded_query}"
-            pharmacy_url = f"https://www.google.com/maps/search/pharmacy+near+{encoded_query}"
+            st.success("Results 👇")
 
-            st.success("Doctors found nearby 👇")
-
-            st.markdown(f"👉 [🔍 Search Doctors on Google Maps]({maps_url})")
-            st.markdown(f"🏥 [Find Hospitals]({hospital_url})")
-            st.markdown(f"💊 [Find Pharmacies]({pharmacy_url})")
+            st.markdown(f"[🔍 Doctors](https://www.google.com/maps/search/{encoded_query})")
+            st.markdown(f"[🏥 Hospitals](https://www.google.com/maps/search/hospitals+near+{encoded_query})")
+            st.markdown(f"[💊 Pharmacies](https://www.google.com/maps/search/pharmacy+near+{encoded_query})")
 
 # -------------------------------
 # FOOTER
 # -------------------------------
 st.markdown("---")
-st.caption("Built with Groq + Streamlit")
+st.caption("Built with ❤️ using Groq + Streamlit")
