@@ -20,14 +20,43 @@ except KeyError:
 client = Groq(api_key=GROQ_API_KEY)
 translator = Translator()
 
-LLAMA_MODEL = "llama3-8b-8192"
+LLAMA_MODEL = "llama-3.1-8b-instant"
 
 # -------------------------------
 # LANGUAGE OPTIONS
 # -------------------------------
 languages = {
+    languages = {
     "English": "en",
-    "Hindi": "hi"
+    "Hindi (हिन्दी)": "hi",
+    "Marathi (मराठी)": "mr",
+    "Gujarati (ગુજરાતી)": "gu",
+    "Punjabi (ਪੰਜਾਬੀ)": "pa",
+    "Bengali (বাংলা)": "bn",
+    "Odia (ଓଡ଼ିଆ)": "or",
+    "Assamese (অসমীয়া)": "as",
+    "Urdu (اردو)": "ur",
+    "Tamil (தமிழ்)": "ta",
+    "Telugu (తెలుగు)": "te",
+    "Kannada (ಕನ್ನಡ)": "kn",
+    "Malayalam (മലയാളം)": "ml",
+    "Konkani (कोंकणी)": "kok", 
+    "Manipuri (Meitei)": "mni",
+    "Nepali (नेपाली)": "ne",
+    "Sindhi (सिन्धी)": "sd",
+    "Sanskrit (संस्कृत)": "sa",
+    "Maithili (मैथिली)": "mai",
+    "Dogri (डोगरी)": "doi",
+    "Bodo (बड़ो)": "brx",
+    "Santali (संताली)": "sat",
+    "Kashmiri (کٲشُر)": "ks",
+    "Tulu (ತುಳು)": "tcy",
+    "Bhili (भीली)": "bhb",
+    "Gondi (गोंडी)": "gon",
+    "Khasi (ഖാസി)": "kha",
+    "Mizo (Mizo ṭawng)": "lus"
+}
+
 }
 
 selected_lang = st.sidebar.selectbox("🌍 Select Language", list(languages.keys()))
