@@ -2,7 +2,6 @@ import streamlit as st
 from groq import Groq
 import urllib.parse
 from googletrans import Translator
-import speech_recognition as sr
 from PIL import Image
 
 # -------------------------------
@@ -23,10 +22,9 @@ translator = Translator()
 LLAMA_MODEL = "llama-3.1-8b-instant"
 
 # -------------------------------
-# LANGUAGE OPTIONS
+# LANGUAGE OPTIONS (FIXED)
 # -------------------------------
 languages = {
-    languages = {
     "English": "en",
     "Hindi (हिन्दी)": "hi",
     "Marathi (मराठी)": "mr",
@@ -39,24 +37,7 @@ languages = {
     "Tamil (தமிழ்)": "ta",
     "Telugu (తెలుగు)": "te",
     "Kannada (ಕನ್ನಡ)": "kn",
-    "Malayalam (മലയാളം)": "ml",
-    "Konkani (कोंकणी)": "kok", 
-    "Manipuri (Meitei)": "mni",
-    "Nepali (नेपाली)": "ne",
-    "Sindhi (सिन्धी)": "sd",
-    "Sanskrit (संस्कृत)": "sa",
-    "Maithili (मैथिली)": "mai",
-    "Dogri (डोगरी)": "doi",
-    "Bodo (बड़ो)": "brx",
-    "Santali (संताली)": "sat",
-    "Kashmiri (کٲشُر)": "ks",
-    "Tulu (ತುಳು)": "tcy",
-    "Bhili (भीली)": "bhb",
-    "Gondi (गोंडी)": "gon",
-    "Khasi (ഖാസി)": "kha",
-    "Mizo (Mizo ṭawng)": "lus"
-}
-
+    "Malayalam (മലയാളം)": "ml"
 }
 
 selected_lang = st.sidebar.selectbox("🌍 Select Language", list(languages.keys()))
@@ -71,7 +52,7 @@ def generate_groq_response(user_message):
             messages=[
                 {
                     "role": "system",
-                    "content": "You are a medical assistant. Provide general health guidance only. Do not diagnose. Suggest consulting a doctor."
+                    "content": "You are a medical assistant. Provide general guidance only. Do not diagnose."
                 },
                 {"role": "user", "content": user_message}
             ],
@@ -83,27 +64,12 @@ def generate_groq_response(user_message):
         return f"❌ Error: {e}"
 
 # -------------------------------
-# VOICE INPUT FUNCTION
-# -------------------------------
-def get_voice_input():
-    r = sr.Recognizer()
-    with sr.Microphone() as source:
-        st.info("🎤 Listening...")
-        audio = r.listen(source)
-
-        try:
-            text = r.recognize_google(audio)
-            return text
-        except:
-            return "❌ Could not understand audio"
-
-# -------------------------------
 # PAGE CONFIG
 # -------------------------------
 st.set_page_config(page_title="AI Medical Assistant", page_icon="🩺")
 
 st.title("🩺 AI Medical Assistant")
-st.caption("Smart • Multilingual • Voice Enabled")
+st.caption("Smart • Multilingual • Image Enabled")
 
 # -------------------------------
 # TABS
@@ -116,13 +82,7 @@ tab1, tab2 = st.tabs(["🩺 Health Assistant", "📍 Nearby Doctors"])
 with tab1:
     st.subheader("Ask Health Questions")
 
-    # TEXT INPUT
     user_query = st.text_area("Enter your symptoms:")
-
-    # VOICE INPUT
-    if st.button("🎤 Speak"):
-        user_query = get_voice_input()
-        st.write("You said:", user_query)
 
     # IMAGE UPLOAD
     uploaded_file = st.file_uploader("📷 Upload symptom image", type=["jpg", "png"])
@@ -136,23 +96,29 @@ with tab1:
         if not user_query.strip():
             st.warning("⚠️ Please enter your query.")
         else:
-            # Emergency detection
             emergency_keywords = [
                 "chest pain", "breathing difficulty", "unconscious",
                 "seizure", "heart attack", "stroke"
             ]
 
             if any(word in user_query.lower() for word in emergency_keywords):
-                st.error("🚨 Emergency! Please seek immediate medical help.")
+                st.error("🚨 Emergency! Seek immediate medical help.")
 
             with st.spinner("Analyzing..."):
-                # Translate to English for AI
-                translated_input = translator.translate(user_query, dest="en").text
+
+                # Safe translate input
+                try:
+                    translated_input = translator.translate(user_query, dest="en").text
+                except:
+                    translated_input = user_query
 
                 response = generate_groq_response(translated_input)
 
-                # Translate back
-                final_response = translator.translate(response, dest=lang_code).text
+                # Safe translate output
+                try:
+                    final_response = translator.translate(response, dest=lang_code).text
+                except:
+                    final_response = response
 
                 st.success("AI Response")
                 st.write(final_response)
