@@ -1,8 +1,21 @@
 import streamlit as st
-from groq import Groq
 import urllib.parse
 from googletrans import Translator
 from PIL import Image
+
+# -------------------------------
+# SAFE IMPORT FOR GROQ
+# -------------------------------
+try:
+    from groq import Groq
+except ImportError:
+    st.error("❌ Groq package is not installed. Add `groq` to requirements.txt")
+    st.stop()
+
+# -------------------------------
+# PAGE CONFIG
+# -------------------------------
+st.set_page_config(page_title="AI Medical Assistant", page_icon="🩺")
 
 # -------------------------------
 # LOAD API KEY
@@ -19,10 +32,10 @@ except KeyError:
 client = Groq(api_key=GROQ_API_KEY)
 translator = Translator()
 
-LLAMA_MODEL = "llama-3.1-8b-instant"
+LLAMA_MODEL = "llama3-8b-8192"   # stable Groq model
 
 # -------------------------------
-# LANGUAGE OPTIONS (YOUR VERSION)
+# LANGUAGE OPTIONS
 # -------------------------------
 languages = {
     "English": "en",
@@ -50,8 +63,14 @@ def generate_groq_response(user_message):
     try:
         chat_completion = client.chat.completions.create(
             messages=[
-                {"role": "system", "content": "Provide general health guidance only. Do not diagnose."},
-                {"role": "user", "content": user_message}
+                {
+                    "role": "system",
+                    "content": "Provide general health guidance only. Do not diagnose."
+                },
+                {
+                    "role": "user",
+                    "content": user_message
+                }
             ],
             model=LLAMA_MODEL,
         )
@@ -60,10 +79,8 @@ def generate_groq_response(user_message):
         return f"❌ Error: {e}"
 
 # -------------------------------
-# PAGE CONFIG
+# TITLE
 # -------------------------------
-st.set_page_config(page_title="AI Medical Assistant", page_icon="🩺")
-
 st.title("🩺 AI Medical Assistant")
 
 # -------------------------------
@@ -77,19 +94,17 @@ tab1, tab2 = st.tabs(["🩺 Health Assistant", "📍 Nearby Doctors"])
 with tab1:
     user_query = st.text_area("Enter your symptoms:")
 
-    uploaded_file = st.file_uploader("📷 Upload image", type=["jpg", "png"])
+    uploaded_file = st.file_uploader("📷 Upload image", type=["jpg", "jpeg", "png"])
 
     if uploaded_file:
         image = Image.open(uploaded_file)
-        st.image(image)
+        st.image(image, caption="Uploaded Image", use_container_width=True)
 
     if st.button("Get Advice"):
         if not user_query.strip():
-            st.warning("Enter your query")
+            st.warning("⚠️ Enter your query")
         else:
             with st.spinner("Analyzing..."):
-
-                # SAFE TRANSLATE INPUT
                 try:
                     translated_input = translator.translate(user_query, dest="en").text
                 except:
@@ -97,7 +112,6 @@ with tab1:
 
                 response = generate_groq_response(translated_input)
 
-                # SAFE TRANSLATE OUTPUT
                 try:
                     final_response = translator.translate(response, dest=lang_code).text
                 except:
@@ -115,7 +129,8 @@ with tab2:
     if st.button("Search"):
         if location:
             query = urllib.parse.quote(f"doctor near {location}")
-            st.markdown(f"https://www.google.com/maps/search/{query}")
+            maps_url = f"https://www.google.com/maps/search/{query}"
+            st.markdown(f"[🔍 Open Google Maps]({maps_url})")
 
 # -------------------------------
 # FOOTER
