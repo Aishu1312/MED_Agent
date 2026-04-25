@@ -1,6 +1,5 @@
 import streamlit as st
 import urllib.parse
-from googletrans import Translator
 from PIL import Image
 
 # -------------------------------
@@ -30,31 +29,8 @@ except KeyError:
 # INIT
 # -------------------------------
 client = Groq(api_key=GROQ_API_KEY)
-translator = Translator()
 
-LLAMA_MODEL = "llama3-8b-8192"   # stable Groq model
-
-# -------------------------------
-# LANGUAGE OPTIONS
-# -------------------------------
-languages = {
-    "English": "en",
-    "Hindi (हिन्दी)": "hi",
-    "Marathi (मराठी)": "mr",
-    "Gujarati (ગુજરાતી)": "gu",
-    "Punjabi (ਪੰਜਾਬੀ)": "pa",
-    "Bengali (বাংলা)": "bn",
-    "Odia (ଓଡ଼ିଆ)": "or",
-    "Assamese (অসমীয়া)": "as",
-    "Urdu (اردو)": "ur",
-    "Tamil (தமிழ்)": "ta",
-    "Telugu (తెలుగు)": "te",
-    "Kannada (ಕನ್ನಡ)": "kn",
-    "Malayalam (മലയാളം)": "ml"
-}
-
-selected_lang = st.sidebar.selectbox("🌍 Select Language", list(languages.keys()))
-lang_code = languages[selected_lang]
+LLAMA_MODEL = "llama3-8b-8192"
 
 # -------------------------------
 # FUNCTION
@@ -105,20 +81,10 @@ with tab1:
             st.warning("⚠️ Enter your query")
         else:
             with st.spinner("Analyzing..."):
-                try:
-                    translated_input = translator.translate(user_query, dest="en").text
-                except:
-                    translated_input = user_query
-
-                response = generate_groq_response(translated_input)
-
-                try:
-                    final_response = translator.translate(response, dest=lang_code).text
-                except:
-                    final_response = response
+                response = generate_groq_response(user_query)
 
                 st.success("AI Response")
-                st.write(final_response)
+                st.write(response)
 
 # -------------------------------
 # TAB 2
