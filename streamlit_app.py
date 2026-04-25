@@ -30,7 +30,7 @@ except KeyError:
 # -------------------------------
 client = Groq(api_key=GROQ_API_KEY)
 
-LLAMA_MODEL = "llama3-8b-8192"
+LLAMA_MODEL = "llama-3.1-8b-instant"
 
 # -------------------------------
 # FUNCTION
