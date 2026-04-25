@@ -1,20 +1,14 @@
 import streamlit as st
 from groq import Groq
-from PIL import Image
-import urllib.parse
-import base64
 from gtts import gTTS
+import urllib.parse
+from PIL import Image
 import os
-from streamlit_mic_recorder import mic_recorder
 
-# ----------------------------
-# PAGE CONFIG
-# ----------------------------
+# ---------------- CONFIG ----------------
 st.set_page_config(page_title="MedAgent AI", page_icon="🩺", layout="wide")
 
-# ----------------------------
-# CSS
-# ----------------------------
+# ---------------- CSS ----------------
 st.markdown("""
 <style>
 .main {
@@ -22,33 +16,30 @@ st.markdown("""
     color:white;
 }
 .big-title {
+    text-align:center;
     font-size:42px;
     font-weight:bold;
-    text-align:center;
     color:#00E5FF;
 }
 .sub-title {
     text-align:center;
     color:#CBD5E1;
 }
-.stButton>button {
-    border-radius:12px;
-    width:100%;
+.poll-box {
+    background:#1e293b;
+    padding:20px;
+    border-radius:20px;
+    margin-top:10px;
 }
 </style>
 """, unsafe_allow_html=True)
 
-# ----------------------------
-# API KEY
-# ----------------------------
+# ---------------- API ----------------
 GROQ_API_KEY = st.secrets["GROQ_API_KEY"]
 client = Groq(api_key=GROQ_API_KEY)
-
 LLAMA_MODEL = "llama-3.1-8b-instant"
 
-# ----------------------------
-# LANGUAGES
-# ----------------------------
+# ---------------- LANGUAGES ----------------
 languages = {
     "English": "en",
     "Hindi": "hi",
@@ -60,127 +51,103 @@ languages = {
     "Telugu": "te",
     "Kannada": "kn",
     "Malayalam": "ml",
-    "Odia": "or",
-    "Assamese": "as",
-    "Urdu": "ur",
-    "Konkani": "kok",
-    "Manipuri": "mni",
-    "Bodo": "brx",
-    "Dogri": "doi",
-    "Maithili": "mai",
-    "Santali": "sat",
-    "Kashmiri": "ks",
-    "Sindhi": "sd",
-    "Nepali": "ne",
-    "Sanskrit": "sa",
-    "Tulu": "tcy",
-    "Bhili": "bhb",
-    "Rajasthani": "raj",
-    "Bhojpuri": "bho"
+    "Urdu": "ur"
 }
 
-# ----------------------------
-# SIDEBAR
-# ----------------------------
+# ---------------- SIDEBAR ----------------
 with st.sidebar:
     st.title("⚙ Settings")
-    selected_lang = st.selectbox("🌍 Select Language", list(languages.keys()))
+    selected_lang = st.selectbox("🌍 Language", list(languages.keys()))
     lang_code = languages[selected_lang]
-    user_location = st.text_input("📍 Enter City / Location")
+    location = st.text_input("📍 Enter City")
 
-# ----------------------------
-# HEADER
-# ----------------------------
+# ---------------- HEADER ----------------
 st.markdown('<div class="big-title">🩺 MedAgent AI</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-title">Your Smart AI Healthcare Assistant</div>', unsafe_allow_html=True)
 
-# ----------------------------
-# FUNCTION
-# ----------------------------
-def generate_response(prompt):
+# ---------------- FUNCTIONS ----------------
+def generate_response(symptom, answers, description):
+    prompt = f"""
+User symptom: {symptom}
+Poll answers: {answers}
+Extra description: {description}
+
+Provide:
+1. Possible cause
+2. Precautions/measures
+3. Whether doctor consultation is needed
+4. Emergency warning signs
+"""
     completion = client.chat.completions.create(
         model=LLAMA_MODEL,
-        messages=[
-            {
-                "role": "system",
-                "content": """
-You are a professional AI doctor.
-Ask only ONE question at a time.
-Provide poll-style options where possible.
-After enough answers, provide medical advice.
-"""
-            },
-            {"role": "user", "content": prompt}
-        ]
+        messages=[{"role":"user","content":prompt}]
     )
     return completion.choices[0].message.content
 
-def text_to_speech(text, lang="en"):
-    tts = gTTS(text=text, lang=lang)
-    file_path = "response.mp3"
-    tts.save(file_path)
-    audio_file = open(file_path, "rb")
-    audio_bytes = audio_file.read()
-    st.audio(audio_bytes, format="audio/mp3")
+def speak(text):
+    tts = gTTS(text=text, lang=lang_code)
+    tts.save("response.mp3")
+    audio_file = open("response.mp3","rb")
+    st.audio(audio_file.read())
 
-# ----------------------------
-# TABS
-# ----------------------------
+# ---------------- SESSION ----------------
+if "step" not in st.session_state:
+    st.session_state.step = 0
+if "answers" not in st.session_state:
+    st.session_state.answers = {}
+
+# ---------------- TABS ----------------
 tab1, tab2, tab3 = st.tabs(["💬 AI Doctor", "📍 Nearby Doctors", "🚑 Emergency"])
 
-# ----------------------------
-# TAB 1
-# ----------------------------
+# ---------------- TAB 1 ----------------
 with tab1:
-    st.markdown("### Describe your symptoms")
+    symptom = st.text_input("Enter your symptom/problem")
 
-    voice_input = mic_recorder(
-        start_prompt="🎤 Start Recording",
-        stop_prompt="⏹ Stop"
-    )
+    if symptom:
+        questions = [
+            ("What type of pain are you experiencing?", 
+             ["Sharp/Stabbing", "Dull/Aching", "Burning", "Other"]),
+            ("How long have you had this?", 
+             ["Few minutes", "Hours", "1 day", "More than 1 day"]),
+            ("Severity level?", 
+             ["Mild", "Moderate", "Severe"])
+        ]
 
-    query = st.text_area("Enter your symptoms")
+        if st.session_state.step < len(questions):
+            q, opts = questions[st.session_state.step]
+            st.markdown(f"### {q}")
+            choice = st.radio("Select one", opts, key=st.session_state.step)
 
-    uploaded_file = st.file_uploader("Upload image/report", type=["png", "jpg", "jpeg", "pdf"])
+            if st.button("Next"):
+                st.session_state.answers[q] = choice
+                st.session_state.step += 1
+                st.rerun()
 
-    if uploaded_file and uploaded_file.type.startswith("image"):
-        img = Image.open(uploaded_file)
-        st.image(img, use_container_width=True)
+        else:
+            description = st.text_area("📝 Describe more about your disease/problem")
 
-    if st.button("Get AI Advice"):
-        if query:
-            with st.spinner("Analyzing..."):
-                response = generate_response(query)
+            if st.button("Get Advice"):
+                with st.spinner("Analyzing..."):
+                    response = generate_response(symptom, st.session_state.answers, description)
+                    st.success("AI Medical Advice")
+                    st.write(response)
+                    speak(response)
 
-                st.success("AI Medical Advice")
-                st.write(response)
-
-                # Voice output
-                text_to_speech(response, lang_code)
-
-# ----------------------------
-# TAB 2
-# ----------------------------
+# ---------------- TAB 2 ----------------
 with tab2:
     if st.button("Search Doctors"):
-        if user_location:
-            query = urllib.parse.quote(f"doctor near {user_location}")
+        if location:
+            query = urllib.parse.quote(f"doctor near {location}")
             maps_url = f"https://www.google.com/maps/search/{query}"
             st.markdown(f"[🔍 Open Google Maps]({maps_url})")
-        else:
-            st.warning("Enter location in sidebar.")
 
-# ----------------------------
-# TAB 3
-# ----------------------------
+# ---------------- TAB 3 ----------------
 with tab3:
     st.write("📞 Ambulance: 108")
     st.write("📞 Emergency: 112")
     st.write("📞 Women Helpline: 1091")
     st.write("📞 Child Helpline: 1098")
 
-# ----------------------------
-# FOOTER
-# ----------------------------
+# ---------------- FOOTER ----------------
 st.markdown("---")
 st.caption("© 2026 MedAgent AI | Powered by Groq")
