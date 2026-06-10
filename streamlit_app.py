@@ -152,9 +152,14 @@ Provide causes, precautions, medicines suggestion, and whether to see a doctor.
 """
                 with st.spinner("Analyzing..."):
                     response = generate_response(final_prompt)
-                    st.success("AI Medical Advice")
-                    st.write(response)
-                    text_to_speech(response)
+
+st.success("AI Medical Advice")
+st.write(response)
+
+try:
+    text_to_speech(response)
+except:
+    pass
 
 # ---------------- TAB 2 ----------------
 with tab2:
