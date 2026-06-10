@@ -74,25 +74,10 @@ def generate_response(prompt):
     return completion.choices[0].message.content
 
 def text_to_speech(text):
-    try:
-        tts = gTTS(
-            text=text[:3000],
-            lang=lang_code,
-            slow=False
-        )
-
-        tts.save("response.mp3")
-
-        with open("response.mp3", "rb") as f:
-            st.audio(
-                f.read(),
-                format="audio/mp3"
-            )
-
-    except Exception:
-        st.warning(
-            "🔊 Voice response is currently unavailable."
-        )
+    tts = gTTS(text=text, lang=lang_code)
+    tts.save("response.mp3")
+    with open("response.mp3", "rb") as f:
+        st.audio(f.read(), format="audio/mp3")
 
 # ---------------- SESSION STATE ----------------
 if "step" not in st.session_state:
@@ -144,75 +129,32 @@ with tab1:
     ]
 
     if query:
+        if st.session_state.step < len(questions):
+            current_q = questions[st.session_state.step]
+            st.markdown(f"### {current_q['q']}")
+            answer = st.radio("Choose one:", current_q["options"], key=f"q{st.session_state.step}")
 
-    if st.session_state.step < len(questions):
+            if st.button("Next"):
+                st.session_state.answers[current_q["q"]] = answer
+                st.session_state.step += 1
+                st.rerun()
 
-        current_q = questions[st.session_state.step]
+        else:
+            description = st.text_area("📝 Describe more about your disease")
 
-        st.markdown(f"### {current_q['q']}")
-
-        answer = st.radio(
-            "Choose one:",
-            current_q["options"],
-            key=f"q{st.session_state.step}"
-        )
-
-        if st.button("Next"):
-
-            st.session_state.answers[current_q["q"]] = answer
-
-            st.session_state.step += 1
-
-            st.rerun()
-
-    else:
-
-        description = st.text_area(
-            "📝 Describe more about your disease"
-        )
-
-        if st.button("Get AI Advice"):
-
-            final_prompt = f"""
+            if st.button("Get AI Advice"):
+                final_prompt = f"""
 Symptoms: {query}
+Answers: {st.session_state.answers}
+Extra Description: {description}
 
-Answers:
-{st.session_state.answers}
-
-Extra Description:
-{description}
-
-Provide causes, precautions, medicines suggestion,
-and whether to see a doctor.
-
-Respond in {selected_lang}.
+Provide causes, precautions, medicines suggestion, and whether to see a doctor.
 """
-
-            with st.spinner("Analyzing..."):
-
-                response = generate_response(
-                    final_prompt
-                )
-
-            st.success(
-                "AI Medical Advice"
-            )
-
-            st.write(
-                response
-            )
-
-            try:
-
-                text_to_speech(
-                    response
-                )
-
-            except Exception:
-
-                st.warning(
-                    "Voice response unavailable."
-                )
+                with st.spinner("Analyzing..."):
+                    response = generate_response(final_prompt)
+                    st.success("AI Medical Advice")
+                    st.write(response)
+                    text_to_speech(response)
 
 # ---------------- TAB 2 ----------------
 with tab2:
