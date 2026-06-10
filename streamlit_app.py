@@ -144,24 +144,36 @@ with tab1:
     ]
 
     if query:
-        if st.session_state.step < len(questions):
-            current_q = questions[st.session_state.step]
-            st.markdown(f"### {current_q['q']}")
-            answer = st.radio("Choose one:", current_q["options"], key=f"q{st.session_state.step}")
 
-            if st.button("Next"):
-                st.session_state.answers[current_q["q"]] = answer
-                st.session_state.step += 1
-                st.rerun()
+    if st.session_state.step < len(questions):
 
-                else:
-            description = st.text_area(
-                "📝 Describe more about your disease"
-            )
+        current_q = questions[st.session_state.step]
 
-            if st.button("Get AI Advice"):
+        st.markdown(f"### {current_q['q']}")
 
-                final_prompt = f"""
+        answer = st.radio(
+            "Choose one:",
+            current_q["options"],
+            key=f"q{st.session_state.step}"
+        )
+
+        if st.button("Next"):
+
+            st.session_state.answers[current_q["q"]] = answer
+
+            st.session_state.step += 1
+
+            st.rerun()
+
+    else:
+
+        description = st.text_area(
+            "📝 Describe more about your disease"
+        )
+
+        if st.button("Get AI Advice"):
+
+            final_prompt = f"""
 Symptoms: {query}
 
 Answers:
@@ -170,37 +182,37 @@ Answers:
 Extra Description:
 {description}
 
-Provide:
-1. Possible causes
-2. Precautions
-3. General medicine suggestions
-4. Home remedies
-5. Whether doctor consultation is required
+Provide causes, precautions, medicines suggestion,
+and whether to see a doctor.
 
 Respond in {selected_lang}.
 """
 
-                with st.spinner("Analyzing..."):
+            with st.spinner("Analyzing..."):
 
-                    response = generate_response(
-                        final_prompt
-                    )
+                response = generate_response(
+                    final_prompt
+                )
 
-                    st.success(
-                        "AI Medical Advice"
-                    )
+            st.success(
+                "AI Medical Advice"
+            )
 
-                    st.write(
-                        response
-                    )
+            st.write(
+                response
+            )
 
-                    st.warning(
-                        "⚠️ This AI assistant provides preliminary healthcare guidance only and does not replace professional medical consultation."
-                    )
+            try:
 
-                    text_to_speech(
-                        response
-                    )
+                text_to_speech(
+                    response
+                )
+
+            except Exception:
+
+                st.warning(
+                    "Voice response unavailable."
+                )
 
 # ---------------- TAB 2 ----------------
 with tab2:
