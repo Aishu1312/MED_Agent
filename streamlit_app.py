@@ -156,10 +156,7 @@ Provide causes, precautions, medicines suggestion, and whether to see a doctor.
 st.success("AI Medical Advice")
 st.write(response)
 
-try:
-    text_to_speech(response)
-except:
-    pass
+text_to_speech(response)
 
 # ---------------- TAB 2 ----------------
 with tab2:
