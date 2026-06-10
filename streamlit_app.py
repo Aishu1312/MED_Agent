@@ -74,10 +74,25 @@ def generate_response(prompt):
     return completion.choices[0].message.content
 
 def text_to_speech(text):
-    tts = gTTS(text=text, lang=lang_code)
-    tts.save("response.mp3")
-    with open("response.mp3", "rb") as f:
-        st.audio(f.read(), format="audio/mp3")
+    try:
+        tts = gTTS(
+            text=text[:3000],
+            lang=lang_code,
+            slow=False
+        )
+
+        tts.save("response.mp3")
+
+        with open("response.mp3", "rb") as f:
+            st.audio(
+                f.read(),
+                format="audio/mp3"
+            )
+
+    except Exception:
+        st.warning(
+            "🔊 Voice response is currently unavailable."
+        )
 
 # ---------------- SESSION STATE ----------------
 if "step" not in st.session_state:
@@ -139,24 +154,53 @@ with tab1:
                 st.session_state.step += 1
                 st.rerun()
 
-        else:
-            description = st.text_area("📝 Describe more about your disease")
+                else:
+            description = st.text_area(
+                "📝 Describe more about your disease"
+            )
 
             if st.button("Get AI Advice"):
+
                 final_prompt = f"""
 Symptoms: {query}
-Answers: {st.session_state.answers}
-Extra Description: {description}
 
-Provide causes, precautions, medicines suggestion, and whether to see a doctor.
+Answers:
+{st.session_state.answers}
+
+Extra Description:
+{description}
+
+Provide:
+1. Possible causes
+2. Precautions
+3. General medicine suggestions
+4. Home remedies
+5. Whether doctor consultation is required
+
+Respond in {selected_lang}.
 """
+
                 with st.spinner("Analyzing..."):
-                    response = generate_response(final_prompt)
 
-st.success("AI Medical Advice")
-st.write(response)
+                    response = generate_response(
+                        final_prompt
+                    )
 
-text_to_speech(response)
+                    st.success(
+                        "AI Medical Advice"
+                    )
+
+                    st.write(
+                        response
+                    )
+
+                    st.warning(
+                        "⚠️ This AI assistant provides preliminary healthcare guidance only and does not replace professional medical consultation."
+                    )
+
+                    text_to_speech(
+                        response
+                    )
 
 # ---------------- TAB 2 ----------------
 with tab2:
