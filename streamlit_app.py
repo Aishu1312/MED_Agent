@@ -54,11 +54,76 @@ languages = {
     "Malayalam": "ml"
 }
 
+# ---------------- TRANSLATIONS ----------------
+translations = {
+"English": {
+"symptoms": "Enter your symptoms",
+"assessment": "Start Assessment",
+"guidance": "Get Medical Guidance"
+},
+
+"Hindi": {
+    "symptoms": "अपने लक्षण दर्ज करें",
+    "assessment": "जांच शुरू करें",
+    "guidance": "चिकित्सकीय सलाह प्राप्त करें"
+},
+
+"Marathi": {
+    "symptoms": "तुमची लक्षणे लिहा",
+    "assessment": "तपासणी सुरू करा",
+    "guidance": "वैद्यकीय मार्गदर्शन मिळवा"
+},
+
+"Gujarati": {
+    "symptoms": "તમારા લક્ષણો દાખલ કરો",
+    "assessment": "તપાસ શરૂ કરો",
+    "guidance": "તબીબી માર્ગદર્શન મેળવો"
+},
+
+"Punjabi": {
+    "symptoms": "ਆਪਣੇ ਲੱਛਣ ਦਰਜ ਕਰੋ",
+    "assessment": "ਜਾਂਚ ਸ਼ੁਰੂ ਕਰੋ",
+    "guidance": "ਮੈਡੀਕਲ ਸਲਾਹ ਪ੍ਰਾਪਤ ਕਰੋ"
+},
+
+"Bengali": {
+    "symptoms": "আপনার উপসর্গ লিখুন",
+    "assessment": "পরীক্ষা শুরু করুন",
+    "guidance": "চিকিৎসা পরামর্শ নিন"
+},
+
+"Tamil": {
+    "symptoms": "உங்கள் அறிகுறிகளை உள்ளிடவும்",
+    "assessment": "பரிசோதனையை தொடங்கவும்",
+    "guidance": "மருத்துவ ஆலோசனை பெறவும்"
+},
+
+"Telugu": {
+    "symptoms": "మీ లక్షణాలను నమోదు చేయండి",
+    "assessment": "పరీక్ష ప్రారంభించండి",
+    "guidance": "వైద్య సలహా పొందండి"
+},
+
+"Kannada": {
+    "symptoms": "ನಿಮ್ಮ ಲಕ್ಷಣಗಳನ್ನು ನಮೂದಿಸಿ",
+    "assessment": "ಪರಿಶೀಲನೆ ಪ್ರಾರಂಭಿಸಿ",
+    "guidance": "ವೈದ್ಯಕೀಯ ಮಾರ್ಗದರ್ಶನ ಪಡೆಯಿರಿ"
+},
+
+"Malayalam": {
+    "symptoms": "നിങ്ങളുടെ ലക്ഷണങ്ങൾ നൽകുക",
+    "assessment": "പരിശോധന ആരംഭിക്കുക",
+    "guidance": "വൈദ്യോപദേശം നേടുക"
+}
+}
+
+
 # ---------------- SIDEBAR ----------------
 with st.sidebar:
     st.title("⚙ Settings")
     selected_lang = st.selectbox("🌍 Select Language", list(languages.keys()))
     lang_code = languages[selected_lang]
+    t = translations[selected_lang]
     user_location = st.text_input("📍 Enter City / Location")
 
 # ---------------- HEADER ----------------
@@ -67,43 +132,41 @@ st.markdown('<div class="sub-title">Your Smart AI Healthcare Assistant</div>', u
 
 # ---------------- FUNCTIONS ----------------
 def generate_response(prompt):
-    try:
-        completion = client.chat.completions.create(
-            model=LLAMA_MODEL,
-            messages=[
-                {
-                    "role": "system",
-                    "content": """
-You are a healthcare assistant.
+try:
+completion = client.chat.completions.create(
+model=LLAMA_MODEL,
+messages=[
+{
+"role": "system",
+"content": f"""
+You are a professional healthcare assistant.
+
+Always respond completely in {selected_lang}.
+
+Provide:
+
+1. Possible causes
+2. Severity level (Low/Medium/High)
+3. Precautions
+4. Home remedies
+5. Diet suggestions
+6. Whether immediate medical attention is needed
+
 Do not diagnose diseases.
-Recommend consulting qualified doctors.
-Emergency symptoms require immediate medical attention.
+Always advise consulting a qualified doctor.
 """
-                },
-                {"role": "user", "content": prompt}
-            ]
-        )
+},
+{
+"role": "user",
+"content": prompt
+}
+]
+)
 
-        return completion.choices[0].message.content
-
-    except Exception as e:
-        return f"Error generating response: {str(e)}"
-        
     return completion.choices[0].message.content
 
-import tempfile
-
-def text_to_speech(text):
-    try:
-        tts = gTTS(text=text, lang=lang_code)
-    except Exception:
-        tts = gTTS(text=text, lang="en")
-
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as fp:
-        tts.save(fp.name)
-
-    with open(fp.name, "rb") as f:
-        st.audio(f.read(), format="audio/mp3")
+except Exception as e:
+    return f"Error generating response: {str(e)}"
 
 
 # ---------------- SESSION STATE ----------------
@@ -112,6 +175,9 @@ if "step" not in st.session_state:
 
 if "answers" not in st.session_state:
     st.session_state.answers = {}
+
+if "assessment_started" not in st.session_state:
+    st.session_state.assessment_started = False
 
 if st.button("Start New Consultation"):
     st.session_state.step = 0
@@ -124,10 +190,22 @@ tab1, tab2, tab3 = st.tabs(["💬 AI Doctor", "📍 Nearby Doctors", "🚑 Emerg
 
 # ---------------- TAB 1 ----------------
 with tab1:
-    st.markdown("### Describe your symptoms")
+    st.markdown(f"### {t['symptoms']}")
 
     # TEXT INPUT
-    query = st.text_area("Enter your symptoms")
+    query = st.text_area(
+    "Enter your symptoms",
+    placeholder="Example: Fever, headache, cough since 2 days"
+)
+
+if st.button(f"🩺 {t['assessment']}"):
+
+    if not query.strip():
+        st.warning("Please enter your symptoms.")
+        st.stop()
+
+    st.session_state.query = query
+    st.session_state.assessment_started = True
 
     # FILE UPLOAD
     uploaded_file = st.file_uploader(
@@ -163,7 +241,7 @@ if uploaded_file:
         }
     ]
 
-    if query and query.strip():
+    if st.session_state.assessment_started:
         if st.session_state.step < len(questions):
             current_q = questions[st.session_state.step]
             st.markdown(f"### {current_q['q']}")
@@ -177,13 +255,22 @@ if uploaded_file:
         else:
             description = st.text_area("📝 Describe more about your disease")
 
-            if st.button("Get AI Advice"):
+            if st.button(f"💡 {t['guidance']}"):
                 final_prompt = f"""
 Symptoms: {query}
 Answers: {st.session_state.answers}
 Extra Description: {description}
 
-Provide causes, precautions, medicines suggestion, and whether to see a doctor.
+Provide:
+
+1. Possible causes
+2. Severity level (Low/Medium/High)
+3. Precautions
+4. Home remedies
+5. Diet suggestions
+6. Whether immediate medical care is needed
+
+Answer in {selected_lang}.
 """
                 with st.spinner("Analyzing..."):
                     response = generate_response(final_prompt)
