@@ -82,7 +82,13 @@ def text_to_speech(text):
     tts = gTTS(text=text, lang=lang_code)
 except:
     tts = gTTS(text=text, lang="en")
-    tts.save("response.mp3")
+   import tempfile
+
+with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as fp:
+    tts.save(fp.name)
+
+with open(fp.name, "rb") as f:
+    st.audio(f.read(), format="audio/mp3")
     with open("response.mp3", "rb") as f:
         st.audio(f.read(), format="audio/mp3")
 
