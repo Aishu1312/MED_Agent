@@ -132,19 +132,18 @@ st.markdown('<div class="sub-title">Your Smart AI Healthcare Assistant</div>', u
 
 # ---------------- FUNCTIONS ----------------
 def generate_response(prompt):
-try:
-completion = client.chat.completions.create(
-model=LLAMA_MODEL,
-messages=[
-{
-"role": "system",
-"content": f"""
+    try:
+        completion = client.chat.completions.create(
+            model=LLAMA_MODEL,
+            messages=[
+                {
+                    "role": "system",
+                    "content": f"""
 You are a professional healthcare assistant.
 
 Always respond completely in {selected_lang}.
 
 Provide:
-
 1. Possible causes
 2. Severity level (Low/Medium/High)
 3. Precautions
@@ -155,19 +154,34 @@ Provide:
 Do not diagnose diseases.
 Always advise consulting a qualified doctor.
 """
-},
-{
-"role": "user",
-"content": prompt
-}
-]
-)
+                },
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ]
+        )
 
-    return completion.choices[0].message.content
+        return completion.choices[0].message.content
 
-except Exception as e:
-    return f"Error generating response: {str(e)}"
+    except Exception as e:
+        return f"Error generating response: {str(e)}"
 
+
+# ---------------- TEXT TO SPEECH ----------------
+import tempfile
+
+def text_to_speech(text):
+    try:
+        tts = gTTS(text=text, lang=lang_code)
+    except Exception:
+        tts = gTTS(text=text, lang="en")
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as fp:
+        tts.save(fp.name)
+
+    with open(fp.name, "rb") as f:
+        st.audio(f.read(), format="audio/mp3")
 
 # ---------------- SESSION STATE ----------------
 if "step" not in st.session_state:
