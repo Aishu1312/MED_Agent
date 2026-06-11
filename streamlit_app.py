@@ -33,8 +33,12 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ---------------- API ----------------
-GROQ_API_KEY = st.secrets["GROQ_API_KEY"]
-client = Groq(api_key=GROQ_API_KEY)
+try:
+    GROQ_API_KEY = st.secrets["GROQ_API_KEY"]
+    client = Groq(api_key=GROQ_API_KEY)
+except Exception:
+    st.error("GROQ_API_KEY not found in Streamlit Secrets.")
+    st.stop()
 LLAMA_MODEL = "llama-3.1-8b-instant"
 
 # ---------------- LANGUAGES ----------------
