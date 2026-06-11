@@ -3,7 +3,6 @@ from groq import Groq
 from PIL import Image
 import urllib.parse
 from gtts import gTTS
-from streamlit_mic_recorder import mic_recorder
 
 # ---------------- PAGE CONFIG ----------------
 st.set_page_config(page_title="MedAgent AI", page_icon="🩺", layout="wide")
