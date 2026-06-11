@@ -143,21 +143,22 @@ with tab1:
 
     # FILE UPLOAD
     uploaded_file = st.file_uploader(
-"Upload image/report",
-type=["png", "jpg", "jpeg", "pdf"]
+    "Upload image/report",
+    type=["png", "jpg", "jpeg", "pdf"]
 )
 
 if uploaded_file:
-if uploaded_file.type.startswith("image"):
-    try:
-        img = Image.open(uploaded_file)
-        st.image(img, use_container_width=True)
-    except Exception:
-        st.error("Invalid image file.")
 
-elif uploaded_file.type == "application/pdf":
-    st.success("PDF uploaded successfully.")
+    if uploaded_file.type.startswith("image"):
+        try:
+            img = Image.open(uploaded_file)
+            st.image(img, use_container_width=True)
+        except Exception:
+            st.error("Invalid image file.")
 
+    elif uploaded_file.type == "application/pdf":
+        st.success("PDF uploaded successfully.")
+        
     # POLL QUESTIONS
     questions = [
         {
