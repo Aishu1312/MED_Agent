@@ -39,7 +39,7 @@ try:
 except Exception:
     st.error("GROQ_API_KEY not found in Streamlit Secrets.")
     st.stop()
-LLAMA_MODEL = "llama-3.1-8b-instant"
+LLAMA_MODEL = "llama-3.3-70b-versatile"
 
 # ---------------- LANGUAGES ----------------
 languages = {
@@ -68,13 +68,27 @@ st.markdown('<div class="sub-title">Your Smart AI Healthcare Assistant</div>', u
 
 # ---------------- FUNCTIONS ----------------
 def generate_response(prompt):
-    completion = client.chat.completions.create(
-        model=LLAMA_MODEL,
-        messages=[
-            {"role": "system", "content": "You are an AI medical assistant."},
-            {"role": "user", "content": prompt}
-        ]
-    )
+    def generate_response(prompt):
+    try:
+        completion = client.chat.completions.create(
+            model=LLAMA_MODEL,
+            messages=[
+                {
+                    "role": "system",
+                    "content": """
+You are a healthcare assistant.
+Do not diagnose diseases.
+Recommend consulting qualified doctors.
+Emergency symptoms require immediate medical attention.
+"""
+                },
+                {"role": "user", "content": prompt}
+            ]
+        )
+        return completion.choices[0].message.content
+
+    except Exception as e:
+        return f"Error generating response: {str(e)}"
     return completion.choices[0].message.content
 
 def text_to_speech(text):
@@ -93,10 +107,10 @@ with open(fp.name, "rb") as f:
         st.audio(f.read(), format="audio/mp3")
 
 # ---------------- SESSION STATE ----------------
-if "step" not in st.session_state:
+if st.button("Start New Consultation"):
     st.session_state.step = 0
-if "answers" not in st.session_state:
     st.session_state.answers = {}
+    st.rerun()
 
 # ---------------- TABS ----------------
 tab1, tab2, tab3 = st.tabs(["💬 AI Doctor", "📍 Nearby Doctors", "🚑 Emergency"])
@@ -121,8 +135,14 @@ with tab1:
 
     # FILE UPLOAD
     uploaded_file = st.file_uploader("Upload image/report", type=["png", "jpg", "jpeg", "pdf"])
+    elif uploaded_file and uploaded_file.type == "application/pdf":
+    st.success("PDF uploaded successfully.")
     if uploaded_file and uploaded_file.type.startswith("image"):
-        img = Image.open(uploaded_file)
+      try:
+    img = Image.open(uploaded_file)
+    st.image(img, use_container_width=True)
+except Exception:
+    st.error("Invalid image file.")
         st.image(img, use_container_width=True)
 
     # POLL QUESTIONS
@@ -141,7 +161,7 @@ with tab1:
         }
     ]
 
-    if query:
+    if query and query.strip():
         if st.session_state.step < len(questions):
             current_q = questions[st.session_state.step]
             st.markdown(f"### {current_q['q']}")
@@ -172,7 +192,8 @@ Provide causes, precautions, medicines suggestion, and whether to see a doctor.
 # ---------------- TAB 2 ----------------
 with tab2:
     if st.button("Search Doctors"):
-        if user_location:
+        else:
+    st.warning("Please enter a location.")
             query_map = urllib.parse.quote(f"doctor near {user_location}")
             maps_url = f"https://www.google.com/maps/search/{query_map}"
             st.markdown(f"[🔍 Open Google Maps]({maps_url})")
