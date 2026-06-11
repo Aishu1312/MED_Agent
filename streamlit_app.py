@@ -300,6 +300,10 @@ if st.button(t["new_consultation"]):
     st.session_state.step = 0
     st.session_state.answers = {}
     st.session_state.assessment_started = False
+
+    if "query" in st.session_state:
+        del st.session_state["query"]
+
     st.rerun()
 
 
@@ -316,11 +320,12 @@ with tab1:
     st.markdown(f"### {t['symptoms']}")
 
     # TEXT INPUT
-      query = st.text_area(
+    query = st.text_area(
         t["symptoms"],
         placeholder=t["symptoms"]
     )
 
+    # START ASSESSMENT BUTTON
     if st.button(f"🩺 {t['assessment']}"):
 
         if not query.strip():
@@ -330,7 +335,7 @@ with tab1:
             st.session_state.assessment_started = True
 
     # FILE UPLOAD
-uploaded_file = st.file_uploader(
+    uploaded_file = st.file_uploader(
         t["upload"],
         type=["png", "jpg", "jpeg", "pdf"]
     )
@@ -346,7 +351,7 @@ uploaded_file = st.file_uploader(
 
         elif uploaded_file.type == "application/pdf":
             st.success("PDF uploaded successfully.")
-        
+
     # POLL QUESTIONS
     questions = [
         {
@@ -363,6 +368,7 @@ uploaded_file = st.file_uploader(
         }
     ]
 
+    # SHOW QUESTIONS ONLY AFTER START ASSESSMENT
     if st.session_state.assessment_started:
 
         if st.session_state.step < len(questions):
