@@ -208,6 +208,8 @@ translations = {
     }
 }
 
+if "language" not in st.session_state:
+    st.session_state.language = "English"
 
 # ---------------- SIDEBAR ----------------
 with st.sidebar:
@@ -312,7 +314,7 @@ with tab1:
     st.markdown(f"### {t['symptoms']}")
 
     # TEXT INPUT
-   query = st.text_area(
+       query = st.text_area(
         t["symptoms"]
     )
 
@@ -326,22 +328,22 @@ with tab1:
         st.session_state.assessment_started = True
 
     # FILE UPLOAD
-    uploaded_file = st.file_uploader(
-    t["upload"],
-    type=["png", "jpg", "jpeg", "pdf"]
-)
+ uploaded_file = st.file_uploader(
+        t["upload"],
+        type=["png", "jpg", "jpeg", "pdf"]
+    )
 
-if uploaded_file:
+    if uploaded_file:
 
-    if uploaded_file.type.startswith("image"):
-        try:
-            img = Image.open(uploaded_file)
-            st.image(img, use_container_width=True)
-        except Exception:
-            st.error("Invalid image file.")
+        if uploaded_file.type.startswith("image"):
+            try:
+                img = Image.open(uploaded_file)
+                st.image(img, use_container_width=True)
+            except Exception:
+                st.error("Invalid image file.")
 
-    elif uploaded_file.type == "application/pdf":
-        st.success("PDF uploaded successfully.")
+        elif uploaded_file.type == "application/pdf":
+            st.success("PDF uploaded successfully.")
         
     # POLL QUESTIONS
     questions = [
