@@ -109,12 +109,12 @@ def text_to_speech(text):
 
 # ---------------- SESSION STATE ----------------
 if "step" not in st.session_state:
-st.session_state.step = 0
+    st.session_state.step = 0
 
 if "answers" not in st.session_state:
-st.session_state.answers = {}
+    st.session_state.answers = {}
 
-if st.button("🔄 Start New Consultation"):
+if st.button("Start New Consultation"):
     st.session_state.step = 0
     st.session_state.answers = {}
     st.rerun()
