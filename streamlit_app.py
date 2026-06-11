@@ -68,42 +68,43 @@ st.markdown('<div class="sub-title">Your Smart AI Healthcare Assistant</div>', u
 
 # ---------------- FUNCTIONS ----------------
 def generate_response(prompt):
-try:
-completion = client.chat.completions.create(
-model=LLAMA_MODEL,
-messages=[
-{
-"role": "system",
-"content": """
+    try:
+        completion = client.chat.completions.create(
+            model=LLAMA_MODEL,
+            messages=[
+                {
+                    "role": "system",
+                    "content": """
 You are a healthcare assistant.
 Do not diagnose diseases.
 Recommend consulting qualified doctors.
 Emergency symptoms require immediate medical attention.
 """
-},
-{"role": "user", "content": prompt}
-]
-)
+                },
+                {"role": "user", "content": prompt}
+            ]
+        )
 
-    return completion.choices[0].message.content
+        return completion.choices[0].message.content
 
-except Exception as e:
-    return f"Error generating response: {str(e)}"
-
+    except Exception as e:
+        return f"Error generating response: {str(e)}"
+        
     return completion.choices[0].message.content
 
 import tempfile
 
 def text_to_speech(text):
-try:
-tts = gTTS(text=text, lang=lang_code)
-except:
-tts = gTTS(text=text, lang="en")
-with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as fp:
-    tts.save(fp.name)
+    try:
+        tts = gTTS(text=text, lang=lang_code)
+    except Exception:
+        tts = gTTS(text=text, lang="en")
 
-with open(fp.name, "rb") as f:
-    st.audio(f.read(), format="audio/mp3")
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as fp:
+        tts.save(fp.name)
+
+    with open(fp.name, "rb") as f:
+        st.audio(f.read(), format="audio/mp3")
 
 
 # ---------------- SESSION STATE ----------------
