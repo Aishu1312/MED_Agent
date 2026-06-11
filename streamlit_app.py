@@ -299,6 +299,7 @@ if "assessment_started" not in st.session_state:
 if st.button(t["new_consultation"]):
     st.session_state.step = 0
     st.session_state.answers = {}
+    st.session_state.assessment_started = False
     st.rerun()
 
 
@@ -311,24 +312,25 @@ tab1, tab2, tab3 = st.tabs([
 
 # ---------------- TAB 1 ----------------
 with tab1:
+
     st.markdown(f"### {t['symptoms']}")
 
     # TEXT INPUT
-       query = st.text_area(
-        t["symptoms"]
+      query = st.text_area(
+        t["symptoms"],
+        placeholder=t["symptoms"]
     )
 
     if st.button(f"🩺 {t['assessment']}"):
 
         if not query.strip():
             st.warning("Please enter your symptoms.")
-            st.stop()
-
-        st.session_state.query = query
-        st.session_state.assessment_started = True
+        else:
+            st.session_state.query = query
+            st.session_state.assessment_started = True
 
     # FILE UPLOAD
- uploaded_file = st.file_uploader(
+uploaded_file = st.file_uploader(
         t["upload"],
         type=["png", "jpg", "jpeg", "pdf"]
     )
@@ -362,40 +364,60 @@ with tab1:
     ]
 
     if st.session_state.assessment_started:
+
         if st.session_state.step < len(questions):
+
             current_q = questions[st.session_state.step]
+
             st.markdown(f"### {current_q['q']}")
-            answer = st.radio("Choose one:", current_q["options"], key=f"q{st.session_state.step}")
+
+            answer = st.radio(
+                "Choose one:",
+                current_q["options"],
+                key=f"q{st.session_state.step}"
+            )
 
             if st.button(t["next"]):
+
                 st.session_state.answers[current_q["q"]] = answer
                 st.session_state.step += 1
                 st.rerun()
 
         else:
-            description = st.text_area("📝 Describe more about your disease")
+
+            description = st.text_area(
+                "📝 Describe more about your condition"
+            )
 
             if st.button(f"💡 {t['guidance']}"):
+
                 final_prompt = f"""
-Symptoms: {query}
-Answers: {st.session_state.answers}
-Extra Description: {description}
+Symptoms: {st.session_state.query}
+
+Answers:
+{st.session_state.answers}
+
+Extra Description:
+{description}
 
 Provide:
-
 1. Possible causes
-2. Severity level (Low/Medium/High)
+2. Severity level
 3. Precautions
 4. Home remedies
 5. Diet suggestions
-6. Whether immediate medical care is needed
+6. Whether doctor consultation is needed
 
-Answer in {selected_lang}.
+Answer completely in {selected_lang}.
 """
+
                 with st.spinner("Analyzing..."):
+
                     response = generate_response(final_prompt)
+
                     st.success("AI Medical Advice")
                     st.write(response)
+
                     text_to_speech(response)
 
 # ---------------- TAB 2 ----------------
