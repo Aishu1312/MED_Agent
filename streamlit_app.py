@@ -115,9 +115,9 @@ if "answers" not in st.session_state:
 st.session_state.answers = {}
 
 if st.button("🔄 Start New Consultation"):
-st.session_state.step = 0
-st.session_state.answers = {}
-st.rerun()
+    st.session_state.step = 0
+    st.session_state.answers = {}
+    st.rerun()
 
 
 # ---------------- TABS ----------------
