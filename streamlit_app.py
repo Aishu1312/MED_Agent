@@ -127,17 +127,6 @@ tab1, tab2, tab3 = st.tabs(["💬 AI Doctor", "📍 Nearby Doctors", "🚑 Emerg
 with tab1:
     st.markdown("### Describe your symptoms")
 
-    # MIC
-    audio = mic_recorder(
-        start_prompt="🎤 Start Recording",
-        stop_prompt="⏹ Stop Recording",
-        key="recorder"
-    )
-
-    if audio:
-        st.success("Voice recorded successfully!")
-        st.audio(audio["bytes"])
-
     # TEXT INPUT
     query = st.text_area("Enter your symptoms")
 
