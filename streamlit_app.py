@@ -68,49 +68,56 @@ st.markdown('<div class="sub-title">Your Smart AI Healthcare Assistant</div>', u
 
 # ---------------- FUNCTIONS ----------------
 def generate_response(prompt):
-    def generate_response(prompt):
-    try:
-        completion = client.chat.completions.create(
-            model=LLAMA_MODEL,
-            messages=[
-                {
-                    "role": "system",
-                    "content": """
+try:
+completion = client.chat.completions.create(
+model=LLAMA_MODEL,
+messages=[
+{
+"role": "system",
+"content": """
 You are a healthcare assistant.
 Do not diagnose diseases.
 Recommend consulting qualified doctors.
 Emergency symptoms require immediate medical attention.
 """
-                },
-                {"role": "user", "content": prompt}
-            ]
-        )
-        return completion.choices[0].message.content
+},
+{"role": "user", "content": prompt}
+]
+)
 
-    except Exception as e:
-        return f"Error generating response: {str(e)}"
     return completion.choices[0].message.content
 
-def text_to_speech(text):
-    try:
-    tts = gTTS(text=text, lang=lang_code)
-except:
-    tts = gTTS(text=text, lang="en")
-   import tempfile
+except Exception as e:
+    return f"Error generating response: {str(e)}"
 
+    return completion.choices[0].message.content
+
+import tempfile
+
+def text_to_speech(text):
+try:
+tts = gTTS(text=text, lang=lang_code)
+except:
+tts = gTTS(text=text, lang="en")
 with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as fp:
     tts.save(fp.name)
 
 with open(fp.name, "rb") as f:
     st.audio(f.read(), format="audio/mp3")
-    with open("response.mp3", "rb") as f:
-        st.audio(f.read(), format="audio/mp3")
+
 
 # ---------------- SESSION STATE ----------------
-if st.button("Start New Consultation"):
-    st.session_state.step = 0
-    st.session_state.answers = {}
-    st.rerun()
+if "step" not in st.session_state:
+st.session_state.step = 0
+
+if "answers" not in st.session_state:
+st.session_state.answers = {}
+
+if st.button("🔄 Start New Consultation"):
+st.session_state.step = 0
+st.session_state.answers = {}
+st.rerun()
+
 
 # ---------------- TABS ----------------
 tab1, tab2, tab3 = st.tabs(["💬 AI Doctor", "📍 Nearby Doctors", "🚑 Emergency"])
@@ -134,16 +141,21 @@ with tab1:
     query = st.text_area("Enter your symptoms")
 
     # FILE UPLOAD
-    uploaded_file = st.file_uploader("Upload image/report", type=["png", "jpg", "jpeg", "pdf"])
-    elif uploaded_file and uploaded_file.type == "application/pdf":
-    st.success("PDF uploaded successfully.")
-    if uploaded_file and uploaded_file.type.startswith("image"):
-      try:
-    img = Image.open(uploaded_file)
-    st.image(img, use_container_width=True)
-except Exception:
-    st.error("Invalid image file.")
+    uploaded_file = st.file_uploader(
+"Upload image/report",
+type=["png", "jpg", "jpeg", "pdf"]
+)
+
+if uploaded_file:
+if uploaded_file.type.startswith("image"):
+    try:
+        img = Image.open(uploaded_file)
         st.image(img, use_container_width=True)
+    except Exception:
+        st.error("Invalid image file.")
+
+elif uploaded_file.type == "application/pdf":
+    st.success("PDF uploaded successfully.")
 
     # POLL QUESTIONS
     questions = [
@@ -191,12 +203,25 @@ Provide causes, precautions, medicines suggestion, and whether to see a doctor.
 
 # ---------------- TAB 2 ----------------
 with tab2:
-    if st.button("Search Doctors"):
-        else:
-    st.warning("Please enter a location.")
-            query_map = urllib.parse.quote(f"doctor near {user_location}")
-            maps_url = f"https://www.google.com/maps/search/{query_map}"
-            st.markdown(f"[🔍 Open Google Maps]({maps_url})")
+
+if st.button("Search Doctors"):
+
+    if user_location:
+
+        query_map = urllib.parse.quote(
+            f"doctor near {user_location}"
+        )
+
+        maps_url = (
+            f"https://www.google.com/maps/search/{query_map}"
+        )
+
+        st.markdown(
+            f"[🔍 Open Google Maps]({maps_url})"
+        )
+
+    else:
+        st.warning("Please enter a location.")
 
 # ---------------- TAB 3 ----------------
 with tab3:
