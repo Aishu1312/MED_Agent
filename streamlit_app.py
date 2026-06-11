@@ -206,24 +206,24 @@ Provide causes, precautions, medicines suggestion, and whether to see a doctor.
 # ---------------- TAB 2 ----------------
 with tab2:
 
-if st.button("Search Doctors"):
+    if st.button("Search Doctors"):
 
-    if user_location:
+        if user_location:
 
-        query_map = urllib.parse.quote(
-            f"doctor near {user_location}"
-        )
+            query_map = urllib.parse.quote(
+                f"doctor near {user_location}"
+            )
 
-        maps_url = (
-            f"https://www.google.com/maps/search/{query_map}"
-        )
+            maps_url = (
+                f"https://www.google.com/maps/search/{query_map}"
+            )
 
-        st.markdown(
-            f"[🔍 Open Google Maps]({maps_url})"
-        )
+            st.markdown(
+                f"[🔍 Open Google Maps]({maps_url})"
+            )
 
-    else:
-        st.warning("Please enter a location.")
+        else:
+            st.warning("Please enter a location.")
 
 # ---------------- TAB 3 ----------------
 with tab3:
