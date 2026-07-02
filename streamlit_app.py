@@ -16,6 +16,12 @@ load_dotenv(dotenv_path=os.path.join(script_dir, ".env"), override=True)
 
 # ---------------- DATABASE CONNECTION ----------------
 MONGODB_URI = os.environ.get("MONGODB_URI")
+if not MONGODB_URI:
+    try:
+        MONGODB_URI = st.secrets["MONGODB_URI"]
+    except Exception:
+        pass
+
 db_enabled = False
 db = None
 db_error = None
