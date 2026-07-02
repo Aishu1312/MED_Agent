@@ -1,0 +1,18 @@
+# Environment variables
+.env
+
+# Python caching
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.ipynb_checkpoints/
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# Streamlit config/secrets (in case created locally)
+.streamlit/config.toml
+.streamlit/secrets.toml
