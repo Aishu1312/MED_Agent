@@ -1,6 +1,6 @@
 # 🩺 MedAgent AI – Smart Virtual Healthcare Assistant
 
-**Author(s):** Aishwarya Lala 
+**Author(s):** Aishwarya Lala
 **Affiliation:** St. Vincent Pallotti College of Engineering and Technology  
 **Date:** April 2026 (Updated July 2026)  
 
