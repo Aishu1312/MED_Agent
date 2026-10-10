@@ -1,4 +1,4 @@
-# 🩺 MedAgent AI – Smart Virtual Healthcare Assistant
+# 🩺 MedAgent AI: Intelligent Healthcare Companion for Smarter Well - being
 
 **Author(s):** Aishwarya Lala 
 
