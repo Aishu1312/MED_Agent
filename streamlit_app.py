@@ -197,7 +197,7 @@ if GROQ_API_KEY:
     except Exception:
         pass
 
-LLAMA_MODEL = "llama-3.3-70b-versatile"
+LLAMA_MODEL = "openai/gpt-oss-120b"
 
 # ---------------- LANGUAGES ----------------
 languages = {
